@@ -1,15 +1,19 @@
 {
-  "timeZone": "Europe/London",
+  "timeZone": "Europe/Rome",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
   "dependencies": {
-    "libraries": [{
-      "userSymbol": "OAuth2",
-      "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
-      "version": "22"
-    }]
+    "libraries": [
+      {
+        "userSymbol": "OAuth2",
+        "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
+        "version": "43"
+      }
+    ]
   },
   "webapp": {
-    "access": "MYSELF",
-    "executeAs": "USER_DEPLOYING"
+    "executeAs": "USER_DEPLOYING",
+    "access": "MYSELF"
   },
   "dataStudio": {
     "name": "Facebook Connector",
