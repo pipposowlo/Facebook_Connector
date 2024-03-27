@@ -4,6 +4,7 @@
 Based  on @halsandr Facebook connector.
 Works with OAut2. Make sure to grant marketing Api access to your Facebook app as you will need  ads_read and read_insights permissions.
 
+Api results pagination does not work for me, so make sure you stay within 5000 result limit.
 
 ------------
 [![Facebook Connector](https://img.shields.io/github/tag/halsandr/Facebook_Connector.svg)](https://github.com/halsandr/Facebook_Connector)
