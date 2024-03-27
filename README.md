@@ -2,7 +2,7 @@
 **Google Data Studio Community Connector for Facebook Insights.**
 
 Based  on @halsandr Facebook connector.
-Works with OAut2. Make sure to give grant marketing Api accesso to your Facebook app as you will need  ads_read and read_insights permissions.
+Works with OAut2. Make sure to grant marketing Api access to your Facebook app as you will need  ads_read and read_insights permissions.
 
 
 ------------
