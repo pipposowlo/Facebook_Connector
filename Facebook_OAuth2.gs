@@ -15,12 +15,21 @@ function runFBAuth(e) {
   var service = getService();
   var html = '';
   if (service.hasAccess()) {
-    var url = 'https://graph.facebook.com/v2.10/me';
+    var url = 'https://graph.facebook.com/v19.0/me';
     var response = UrlFetchApp.fetch(url, {
       headers: {
         'Authorization': 'Bearer ' + service.getAccessToken()
-      }
+      },
+        muteHttpExceptions: true // Add this option to examine full response
+
     });
+    if (response.getResponseCode() == 401) {
+  var responseBody = response.getContentText();
+  Logger.log('Full response body: ' + responseBody);
+  // Handle error or troubleshoot based on the response
+} else {
+  // Parse response and map data as usual
+}
     var result = JSON.parse(response.getContentText());
     Logger.log(JSON.stringify(result, null, 2));
   } else {
@@ -33,7 +42,7 @@ function runFBAuth(e) {
 /**
  * Reset the authorization state, so that it can be re-tested.
  */
-function reset() {
+function resetAuth() {
   var service = getService();
   service.reset();
 }
@@ -44,8 +53,8 @@ function reset() {
 function getService() {
   return OAuth2.createService('Facebook')
       // Set the endpoint URLs.
-      .setAuthorizationBaseUrl('https://www.facebook.com/dialog/oauth?scope=manage_pages,read_insights')
-      .setTokenUrl('https://graph.facebook.com/v2.10/oauth/access_token')
+      .setAuthorizationBaseUrl('https://www.facebook.com/dialog/oauth?scope=public_profile,ads_read,read_insights')
+      .setTokenUrl('https://graph.facebook.com/v19.0/oauth/access_token')
 
       // Set the client ID and secret.
       .setClientId(CLIENT_ID)
@@ -70,6 +79,11 @@ function authCallback(request) {
   } else {
     return HtmlService.createHtmlOutput('Denied!  Please close the tab and contact the developer.');
   }
+}
+
+function logRedirectUri() {
+  var service = getService();
+  Logger.log(service.getRedirectUri());
 }
 
 function get3PAuthorizationUrls() {
