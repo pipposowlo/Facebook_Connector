@@ -1,65 +1,89 @@
-function getConfig(request) {
+Function getConfig(request) {
   var service = getService();
-  var response = JSON.parse(UrlFetchApp.fetch("https://graph.facebook.com/v2.10/me/accounts", {
+  
+  // Constructing the URL for Ad Account Insights API request
+  var url = 'https://graph.facebook.com/v19.0/me/adaccounts?fields=name,id';
+  
+  // Fetching ad account data from Facebook API
+  var response = UrlFetchApp.fetch(url, {
+    method: 'GET',
     headers: {
       Authorization: 'Bearer ' + service.getAccessToken()
     }
-  }));
+  });
+  
+  // Parsing the response to extract relevant data
+  var adAccountData = JSON.parse(response.getContentText());
+  
+  // Creating the config object with options for Ad Account ID
   var config = {
     configParams: [
       {
         type: "SELECT_SINGLE",
-        name: "pageID",
-        displayName: "Page ID",
-        helpText: "Please select the Page ID for which you would like to retrieve the Statistics.",
+        name: "adAccountID",
+        displayName: "Ad Account ID",
+        helpText: "Please select the Ad Account ID for which you would like to retrieve the Statistics.",
         options: []
       }
     ],
     dateRangeRequired: true
   };
-  response.data.forEach(function(field) {
+  
+  // Populating the options for Ad Account ID based on the ad account data
+  adAccountData.data.forEach(function(account) {
     config.configParams[0].options.push({
-      label: field.name,
-      value: field.id
+      label: account.name,
+      value: account.id
     });
-  })
+  });
+  
+  // Return the config object
   return config;
-};
+}
 
 
 var facebookSchema = [
   {
-    name: 'timestamp',
-    label: 'Timestamp',
+    name: 'date_start',
+    label: 'Date start',
     dataType: 'STRING',
     semantics: {
       conceptType: 'DIMENSION'
     }
   },
   {
-    name: 'timestampWeek',
-    label: 'Timestamp Week',
+    name: 'date_end',
+    label: 'Date end',
     dataType: 'STRING',
     semantics: {
       conceptType: 'DIMENSION'
     }
   },
   {
-    name: 'timestampMonth',
-    label: 'Timestamp Month',
+    name: 'campaign_name',
+    label: 'Campaign Name',
     dataType: 'STRING',
     semantics: {
       conceptType: 'DIMENSION'
     }
   },
   {
-    name: 'likes',
-    label: 'Likes Total',
+    name: 'clicks',
+    label: 'Clicks',
     dataType: 'NUMBER',
     semantics: {
       conceptType: 'METRIC'
     }
   },
+  {
+    name: 'cpm',
+    label: 'CPM',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC'
+    }
+  },
+  
   {
     name: 'impressions_daily',
     label: 'Impressions',
@@ -69,20 +93,32 @@ var facebookSchema = [
     }
   },
   {
-    name: 'engagements_daily',
-    label: 'Page Post Engagements',
+    name: 'purchases',
+    label: 'Purchase',
+    dataType: 'NUMBER',
+    semantics: {
+      conceptType: 'METRIC'
+    }
+  },{
+    name: 'spend',
+    label: 'Spend',
     dataType: 'NUMBER',
     semantics: {
       conceptType: 'METRIC'
     }
   }
+  
 ];
+
 
 function getSchema(request) {
   return {schema: facebookSchema};
 };
 
+
+
 function getData(request) {
+
   var service = getService();
   
   function dateDelta(dObj, num) {
@@ -107,14 +143,12 @@ function getData(request) {
   }
   
   var gStartDate = new Date(request.dateRange.startDate);
-  var gStartDate = new Date(dateDelta(gStartDate, -1));
   var gEndDate = new Date(request.dateRange.endDate);
-  var gEndDate = new Date(dateDelta(gEndDate, +1));
   var gRange = Math.ceil(Math.abs(gEndDate - gStartDate) / (1000 * 3600 * 24));
   var gBatches = Math.ceil(gRange / 92);
 
   if (gBatches < 2) {
-    var batch = [{"method": "GET", "relative_url": request.configParams.pageID + "/insights/page_fans,page_impressions,page_post_engagements?since=" + dateDelta(gStartDate) + "&until=" + dateDelta(gEndDate)}];
+    var batch = [{"method": "GET", "relative_url": request.configParams.adAccountID + "/insights/?level=adset&fields=impressions,cpm,clicks,spend,campaign_id,campaign_name,adset_name,action_values&filtering=[{\"field\":\"action_type\",\"operator\":\"IN\",\"value\":[\"purchase\"]}]&limit=5000&time_range={'since':'" + dateDelta(gStartDate) + "','until':'" + dateDelta(gEndDate) + "'}&time_increment=monthly"}];
     //console.log(batch);
   } else {
     batch = [];
@@ -127,23 +161,26 @@ function getData(request) {
       } else {
         var iterEnd = dateDelta(gStartDate, (iterRanges * (i + 1)) + 1);
       }
-      batch.push({"method": "GET", "relative_url": request.configParams.pageID + "/insights/page_fans,page_impressions,page_post_engagements?since=" + iterStart + "&until=" + iterEnd})
+      batch.push({"method": "GET", "relative_url": request.configParams.adAccountID + "/insights/?level=adset&fields=impressions,cpm,clicks,spend,campaign_id,campaign_name,adset_name,actions_values&filtering=[{\"field\":\"action_type\",\"operator\":\"IN\",\"value\":[\"purchase\"]}]&limit=5000&time_range={'since':'" + iterStart + "','until':'" + iterEnd + "'}&time_increment=monthly"})
     }
     //console.log(batch);
   }
-  
     // Fetch the data with UrlFetchApp
-  var url = "https://graph.facebook.com?include_headers=false&batch=" + encodeURIComponent(JSON.stringify(batch))
+  var url = "https://graph.facebook.com/v19.0/?include_headers=false&batch=" + encodeURIComponent(JSON.stringify(batch))
   
-  var response = JSON.parse(UrlFetchApp.fetch(url, {
+  var response = (UrlFetchApp.fetch(url, {
     method: 'POST',
     headers: {    
         Authorization: 'Bearer ' + service.getAccessToken()
     }
   }));
-  
+
+var adAccountData = JSON.parse(response.getContentText());
   // Prepare the schema for the fields requested.
   var dataSchema = [];
+
+  console.info("adAccountData: ", JSON.stringify(adAccountData));
+  
   request.fields.forEach(function(field) {
     for (var i = 0; i < facebookSchema.length; i++) {
       if (facebookSchema[i].name === field.name) {
@@ -154,55 +191,61 @@ function getData(request) {
   });
   var data = [];
       
-      // Prepare the tabular 
-      // console.log("Response: %s", response);
-//      response.data[0].values.forEach(function(day, i) {
-    response.forEach(function(resp) {
-      var resp = JSON.parse(resp.body);
-      resp.data[0].values.forEach(function(day, i){
+  // Prepare the tabular data
+adAccountData.forEach(function(resp) {
+    var jsonData = JSON.parse(resp.body);
+    jsonData.data.forEach(function(entry) {
         var values = [];
         dataSchema.forEach(function(field) {
-          switch(field.name) {
-            case 'timestamp':
-              var fbTime = day.end_time;
-              var myTime = fbTime.substring(0,4) + fbTime.substring(5,7) + fbTime.substring(8,10);
-              values.push(myTime);
-              break;
-            case 'timestampWeek':
-              var myTime = new Date(day.end_time);
-              var startTime = new Date(myTime.getFullYear(), 00, 01);
-              var deltaTime = Math.abs(myTime - startTime);
-              var weekTime = ("0" + Math.ceil((deltaTime / (1000 * 3600 * 24)) / 7)).slice(-2);
-              values.push(myTime.getFullYear() + weekTime);
-              break;  
-            case 'timestampMonth':
-              var fbTime = day.end_time;
-              var myTime = fbTime.substring(0,4) + fbTime.substring(5,7);
-              values.push(myTime);
-              break;            
-            case 'likes':
-              values.push(day.value);
-              break;
-            case 'impressions_daily':
-              values.push(resp.data[1].values[i].value);
-              break;
-            case 'engagements_daily':
-              values.push(resp.data[4].values[i].value);
-              break;
-            default:
-              values.push('');
-          }
+            switch(field.name) {
+                case 'date_start':
+                    values.push(entry.date_start);
+                    break;
+                case 'date_end':
+                    values.push(entry.date_stop);
+                    break;
+                case 'campaign_id':
+                    values.push(entry.campaign_id);
+                    break;
+                case 'campaign_name':
+                    values.push(entry.campaign_name);
+                    break;
+                case 'clicks':
+                    values.push(parseInt(entry.clicks));
+                    break;
+                case 'cpm':
+                    values.push(parseFloat(entry.cpm));
+                    break;
+                case 'impressions_daily':
+                    values.push(parseInt(entry.impressions));
+                    break;
+                case 'spend':
+                values.push(parseFloat(entry.spend));
+                break;
+                case 'purchases':
+                    // Check if the 'actions' array exists and has elements
+                    if (entry.action_values && entry.action_values.length > 0) {
+                        // Iterate through the 'actions' array to find 'purchase' action_type
+                        var purchaseValue = entry.action_values.find(function(action) {
+                            return action.action_type === 'purchase';
+                        });
+                        // Push the purchase value if found, otherwise push an empty string
+                        values.push(purchaseValue ? parseFloat(purchaseValue.value) : '');
+                    } else {
+                        // If 'actions' array doesn't exist or is empty, push an empty string
+                        values.push('');
+                    }
+                    break;
+                default:
+                    values.push('');
+            }
         });
+        // Push the values for this entry into the data array
         data.push({
-          values: values
+            values: values   
         });
-      });
     });
-
-    //console.log("Data Schema: %s", dataSchema);
-    //console.log("Data: %s", data);
-
-  
+});
   // Return the tabular data for the given request.
   return {
     schema: dataSchema,
