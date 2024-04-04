@@ -161,7 +161,7 @@ function getData(request) {
       } else {
         var iterEnd = dateDelta(gStartDate, (iterRanges * (i + 1)) + 1);
       }
-      batch.push({"method": "GET", "relative_url": request.configParams.adAccountID + "/insights/?level=adset&fields=impressions,cpm,clicks,spend,campaign_id,campaign_name,adset_name,actions_values&filtering=[{\"field\":\"action_type\",\"operator\":\"IN\",\"value\":[\"purchase\"]}]&limit=5000&time_range={'since':'" + iterStart + "','until':'" + iterEnd + "'}&time_increment=monthly"})
+      batch.push({"method": "GET", "relative_url": request.configParams.adAccountID + "/insights/?level=adset&fields=impressions,cpm,clicks,spend,campaign_id,campaign_name,adset_name,action_values&filtering=[{\"field\":\"action_type\",\"operator\":\"IN\",\"value\":[\"purchase\"]}]&limit=5000&time_range={'since':'" + iterStart + "','until':'" + iterEnd + "'}&time_increment=monthly"})
     }
     //console.log(batch);
   }
