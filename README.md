@@ -4,8 +4,11 @@
 Based  on @halsandr Facebook connector.
 Works with OAut2. Make sure to grant marketing Api access to your Facebook app as you will need  ads_read and read_insights permissions.
 
-Api results pagination does not work for me, so make sure you stay within 5000 result limit.
-Would be great if someone else is able to implement this adding api pagination/cursor handling.  
+Implemente Api pagination in the latest release.
+Updated to work with Insight API 21.0
+
+ATTENTION: The script is set so to get purchase values from the 7d_click attribution, ignoring sales coming from 1d_view. 
+If you wish to get standard 7d_click, 1d_view check the comments in code.gs and change accordingly. 
 
 ------------
 [![Facebook Connector](https://img.shields.io/github/tag/halsandr/Facebook_Connector.svg)](https://github.com/halsandr/Facebook_Connector)
