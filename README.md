@@ -4,7 +4,7 @@
 Based  on @halsandr Facebook connector.
 Works with OAut2. Make sure to grant marketing Api access to your Facebook app as you will need  ads_read and read_insights permissions.
 
-Implemente Api pagination in the latest release.
+Implemented Api pagination in the latest release.
 Updated to work with Insight API 21.0
 
 ATTENTION: The script is set so to get purchase values from the 7d_click attribution, ignoring sales coming from 1d_view. 
